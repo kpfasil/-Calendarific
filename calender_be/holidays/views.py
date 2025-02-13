@@ -17,7 +17,7 @@ def holidays(request):
         return Response(cached_data)
 
     # Fetch data from Calendarific API
-    url = f'https://calendarific.com/api/v2/holidays?api_key={settings.CALENDARIIC_API_KEY}&country={country}&year={year}'
+    url = f'https://calendarific.com/api/v2/holidays?api_key={settings.CALENDARIFIC_API_KEY}&country={country}&year={year}'
     print(url)
     response = requests.get(url)
     data = response.json()
