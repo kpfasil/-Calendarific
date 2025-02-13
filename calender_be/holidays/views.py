@@ -26,3 +26,17 @@ def holidays(request):
     cache.set(cache_key, data, timeout=86400)
 
     return Response(data)
+
+@api_view(['GET'])
+def search_holidays(request):
+    query = request.GET.get('query')
+    country = request.GET.get('country')
+    year = request.GET.get('year')
+    cache_key = f'holidays_{country}_{year}'
+
+    cached_data = cache.get(cache_key)
+    if not cached_data:
+        return Response({'error': 'Data not found'}, status=404)
+
+    filtered_holidays = [holiday for holiday in cached_data['response']['holidays'] if query.lower() in holiday['name'].lower()]
+    return Response(filtered_holidays)
