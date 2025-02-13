@@ -1,6 +1,8 @@
  # Ignore Python virtual environment
 env/
 myenv/
+calender_fe/node_modules/
+
 
 # Ignore Django migrations
 # **/migrations/
@@ -10,9 +12,6 @@ db.sqlite3
 
 # Ignore environment variables
 .env
-
-# Ignore Node.js dependencies
-# frontend/node_modules/
 
 # Ignore build files
 # frontend/dist/
