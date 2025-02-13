@@ -1,6 +1,6 @@
  # Ignore Python virtual environment
 env/
-venv/
+myenv/
 
 # Ignore Django migrations
 # **/migrations/
