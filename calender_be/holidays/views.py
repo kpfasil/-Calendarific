@@ -1,42 +1,60 @@
+
 import requests
 from django.core.cache import cache
-from rest_framework.decorators import api_view
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-
+from rest_framework import serializers, pagination
 from django.conf import settings
 
-@api_view(['GET'])
-def holidays(request):
-    country = request.GET.get('country')
-    year = request.GET.get('year')
-    cache_key = f'holidays_{country}_{year}'
+class HolidaySerializer(serializers.Serializer):
+    name = serializers.CharField()
+    date = serializers.DictField()
+    description = serializers.CharField()
 
-    # Check if data is cached
-    cached_data = cache.get(cache_key)
-    if cached_data:
-        return Response(cached_data)
+class HolidayPagination(pagination.PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
-    # Fetch data from Calendarific API
-    url = f'https://calendarific.com/api/v2/holidays?api_key={settings.CALENDARIFIC_API_KEY}&country={country}&year={year}'
-    print(url)
-    response = requests.get(url)
-    data = response.json()
+class HolidaysListView(ListAPIView):
+    serializer_class = HolidaySerializer
+    pagination_class = HolidayPagination
 
-    # Cache the data for 24 hours
-    cache.set(cache_key, data, timeout=86400)
+    def get_queryset(self):
+        country = self.request.GET.get('country')
+        year = self.request.GET.get('year')
+        cache_key = f'holidays_{country}_{year}'
+        
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data.get('response', {}).get('holidays', [])
 
-    return Response(data)
+        url = f'https://calendarific.com/api/v2/holidays?api_key={settings.CALENDARIFIC_API_KEY}&country={country}&year={year}'
+        response = requests.get(url)
 
-@api_view(['GET'])
-def search_holidays(request):
-    query = request.GET.get('query')
-    country = request.GET.get('country')
-    year = request.GET.get('year')
-    cache_key = f'holidays_{country}_{year}'
+        try:
+            data = response.json()
+            holidays = data.get('response', {}).get('holidays', [])
+            if isinstance(holidays, list):
+                cache.set(cache_key, data, timeout=86400)
+                return holidays
+        except (ValueError, AttributeError, TypeError):
+            pass
+        
+        return []
 
-    cached_data = cache.get(cache_key)
-    if not cached_data:
-        return Response({'error': 'Data not found'}, status=404)
+# class SearchHolidaysListView(ListAPIView):
+#     serializer_class = HolidaySerializer
+#     pagination_class = HolidayPagination
 
-    filtered_holidays = [holiday for holiday in cached_data['response']['holidays'] if query.lower() in holiday['name'].lower()]
-    return Response(filtered_holidays)
+#     def get_queryset(self):
+#         query = self.request.GET.get('query', '').lower()
+#         country = self.request.GET.get('country')
+#         year = self.request.GET.get('year')
+#         cache_key = f'holidays_{country}_{year}'
+
+#         cached_data = cache.get(cache_key)
+#         if not cached_data:
+#             return []
+
+#         return [holiday for holiday in cached_data['response']['holidays'] if query in holiday['name'].lower()]
