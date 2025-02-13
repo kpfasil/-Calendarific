@@ -1,0 +1,19 @@
+ # Ignore Python virtual environment
+env/
+venv/
+
+# Ignore Django migrations
+# **/migrations/
+
+# Ignore SQLite database
+db.sqlite3
+
+# Ignore environment variables
+.env
+
+# Ignore Node.js dependencies
+# frontend/node_modules/
+
+# Ignore build files
+# frontend/dist/
+
