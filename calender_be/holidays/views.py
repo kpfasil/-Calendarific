@@ -37,7 +37,7 @@ class HolidaysListView(ListAPIView):
             holidays = data.get('response', {}).get('holidays', [])
             if isinstance(holidays, list):
                 cache.set(cache_key, data, timeout=86400)
-                return holidays
+                return data
         except (ValueError, AttributeError, TypeError):
             pass
         
